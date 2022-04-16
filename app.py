@@ -20,8 +20,11 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        return request.form['date']
+        
     return render_template('home.html')
 
 @app.route('/view')
@@ -30,6 +33,8 @@ def view():
 
 @app.route('/food', methods=['GET', 'POST'])
 def food():
+    db = get_db()
+
     if request.method == 'POST':
         name = request.form['food-name']
         protein = int(request.form['protein'])
@@ -37,12 +42,14 @@ def food():
         fat = int(request.form['fat'])
         calories = protein * 4 + carbohydrates * 4 + fat * 9
 
-        db = get_db()
         db.execute('insert into food (name, protein, carbohydrates, fat, calories) values (?,?,?,?,?)', \
         [name, protein, carbohydrates, fat, calories])
         db.commit()
 
-    return render_template('add_food.html')
+    cur = db.execute('select name, protein, carbohydrates, fat, calories from food')
+    results = cur.fetchall()
+
+    return render_template('add_food.html', results=results)
 
 
 if __name__ == "__main__":
