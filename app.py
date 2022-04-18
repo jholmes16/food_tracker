@@ -52,14 +52,16 @@ def index():
 
 @app.route('/view/<date>', methods=['GET', 'POST']) #date is going to be 20170520, how stored in database
 def view(date):
-    if request.method == 'POST':
-        return'<h1> The food item added is #{}</h1>'.format(request.form['food-select'])
     db = get_db()
 
-    cur = db.execute('select entry_date from log_date where entry_date = ?', [date])
-    result = cur.fetchone()
+    cur = db.execute('select id, entry_date from log_date where entry_date = ?', [date])
+    date_result = cur.fetchone()
 
-    d = datetime.strptime(str(result['entry_date']), '%Y%m%d')
+    if request.method == 'POST':
+        db.execute('insert into food_date (food_id, log_date_id) values (?, ?)', [request.form['food-select'], date_result['id']])
+        db.commit()
+
+    d = datetime.strptime(str(date_result['entry_date']), '%Y%m%d')
     pretty_date = datetime.strftime(d, '%B %d, %Y')
 
     food_cur = db.execute('select id, name from food')
